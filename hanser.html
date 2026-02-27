@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#ff7eb9">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Hanser应援站 - 毛怪的家</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- GSAP 动画库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+        
+        :root {
+            --primary-color: #ff7eb9;
+            --secondary-color: #7eb9ff;
+            --accent-color: #ffcc7e;
+            --dark-color: #333333;
+            --light-color: #f8f8f8;
+        }
+        
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            scroll-behavior: smooth;
+            overflow-x: hidden;
+        }
+        
+        .bg-gradient {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        }
+        
+        .text-gradient {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .nav-link {
+            position: relative;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: var(--primary-color);
+            transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        
+        .active::after {
+            width: 100%;
+        }
+        
+        #bg-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: -1;
+        }
+        
+        .section {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        
+        .section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-left: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 2px;
+            background-color: var(--secondary-color);
+        }
+        
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: -4px;
+            top: 0;
+            height: 10px;
+            width: 10px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+        }
+        
+        .music-card {
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .music-card:hover {
+            transform: scale(1.05);
+        }
+        
+        .message-input {
+            resize: none;
+            transition: border-color 0.3s ease;
+        }
+        
+        .message-input:focus {
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: #ff5ea6;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #5ea6ff;
+            transform: translateY(-2px);
+        }
+        
+        .btn-outline {
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        .btn-outline:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            width: 80%;
+            max-width: 700px;
+            border-radius: 10px;
+            position: relative;
+            animation: modalFadeIn 0.3s ease;
+        }
+        
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+        
+        .close:hover {
+            color: var(--primary-color);
+        }
+        
+        .fan-art-card {
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .fan-art-card img {
+            transition: transform 0.5s ease;
+        }
+        
+        .fan-art-card:hover img {
+            transform: scale(1.1);
+        }
+        
+        .fan-art-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            overflow: hidden;
+            width: 100%;
+            height: 0;
+            transition: height 0.5s ease;
+        }
+        
+        .fan-art-card:hover .fan-art-overlay {
+            height: 100%;
+        }
+        
+        .fan-art-text {
+            color: white;
+            font-size: 16px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .timeline-item {
+                padding-left: 20px;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 15% auto;
+            }
+        }
+        
+        /* 加载动画 */
+        .loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        
+        .loader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        .loader-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .loader-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 粉丝分布热力图样式 */
+        #fan-map {
+            width: 100%;
+            height: 400px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        /* 数据统计卡片样式 */
+        .stat-card {
+            border-radius: 10px;
+            padding: 20px;
+            color: white;
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .stat-label {
+            font-size: 1.1rem;
+        }
+        
+        /* 滚动指示器 */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0) translateX(-50%);
+            }
+            40% {
+                transform: translateY(-20px) translateX(-50%);
+            }
+            60% {
+                transform: translateY(-10px) translateX(-50%);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- 加载动画 -->
+    <div class="loader">
+        <div class="loader-content">
+            <div class="loader-spinner"></div>
+            <p class="mt-4 text-lg font-medium text-gray-700">正在加载Hanser的世界...</p>
+        </div>
+    </div>
+
+    <!-- 背景Canvas -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- 导航栏 -->
+    <nav class="fixed top-0 left-0 w-full bg-white bg-opacity-95 shadow-md z-50 backdrop-blur-sm transition-all duration-300">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <a href="#" class="flex items-center space-x-2">
+                    <img src="https://p26-doubao-search-sign.byteimg.com/tos-cn-i-xv4ileqgde/ea3389c6c2dc4539831459b22a1842b0~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1787734383&x-signature=iN5bXb3wCWrghNawf4phWJihuC4%3D" alt="Hanser" class="w-10 h-10 rounded-full sm:w-12 sm:h-12">
+                    <span class="text-lg sm:text-xl font-bold text-gradient">Hanser应援站</span>
+                </a>
+                
+                <!-- 桌面导航 -->
+                <div class="hidden md:flex space-x-6 sm:space-x-8">
+                    <a href="#home" class="nav-link active text-gray-800 hover:text-pink-500 font-medium text-sm sm:text-base">首页</a>
+                    <a href="#profile" class="nav-link text-gray-800 hover:text-pink-500 font-medium text-sm sm:text-base">个人资料</a>
+                    <a href="#works" class="nav-link text-gray-800 hover:text-pink-500 font-medium text-sm sm:text-base">代表作品</a>
+                    <a href="#news" class="nav-link text-gray-800 hover:text-pink-500 font-medium text-sm sm:text-base">最新动态</a>
+                    <a href="#activities" class="nav-link text-gray-800 hover:text-pink-500 font-medium text-sm sm:text-base">活动日程</a>
+                    <a href="#fan-interaction" class="nav-link text-gray-800 hover:text-pink-500 font-medium text-sm sm:text-base">粉丝互动</a>
+                    <a href="#data" class="nav-link text-gray-800 hover:text-pink-500 font-medium text-sm sm:text-base">数据中心</a>
+                </div>
+                
+                <!-- 移动端汉堡菜单 -->
+                <div class="md:hidden">
+                    <button id="menu-toggle" class="text-gray-800 focus:outline-none p-2 -mr-2">
+                        <i class="fas fa-bars text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 移动端导航菜单 -->
+            <div id="mobile-menu" class="md:hidden hidden pt-4 pb-2 animate-fadeIn">
+                <div class="flex flex-col space-y-2">
+                    <a href="#home" class="block py-3 px-4 text-gray-800 hover:bg-pink-50 hover:text-pink-500 font-medium rounded-lg transition-colors">首页</a>
+                    <a href="#profile" class="block py-3 px-4 text-gray-800 hover:bg-pink-50 hover:text-pink-500 font-medium rounded-lg transition-colors">个人资料</a>
+                    <a href="#works" class="block py-3 px-4 text-gray-800 hover:bg-pink-50 hover:text-pink-500 font-medium rounded-lg transition-colors">代表作品</a>
+                    <a href="#news" class="block py-3 px-4 text-gray-800 hover:bg-pink-50 hover:text-pink-500 font-medium rounded-lg transition-colors">最新动态</a>
+                    <a href="#activities" class="block py-3 px-4 text-gray-800 hover:bg-pink-50 hover:text-pink-500 font-medium rounded-lg transition-colors">活动日程</a>
+                    <a href="#fan-interaction" class="block py-3 px-4 text-gray-800 hover:bg-pink-50 hover:text-pink-500 font-medium rounded-lg transition-colors">粉丝互动</a>
+                    <a href="#data" class="block py-3 px-4 text-gray-800 hover:bg-pink-50 hover:text-pink-500 font-medium rounded-lg transition-colors">数据中心</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 首页Banner -->
+    <section id="home" class="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
+        <div class="container mx-auto px-6 z-10 text-center">
+            <h1 class="text-4xl sm:text-5xl md:text-7xl font-bold mb-6 text-white drop-shadow-lg">
+                <span class="text-gradient">Hanser</span>
+            </h1>
+            <p class="text-base sm:text-lg md:text-2xl mb-8 text-white drop-shadow-md max-w-2xl mx-auto leading-relaxed">
+                配音演员 · 歌手 · 虚拟主播<br>
+                用声音传递温暖，用音乐连接心灵
+            </p>
+            <div class="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6 px-4 sm:px-0">
+                <a href="#profile" class="btn-primary px-6 sm:px-8 py-3 rounded-full text-white font-medium text-base sm:text-lg shadow-lg hover:shadow-xl transition-all">
+                    了解更多
+                </a>
+                <a href="#fan-interaction" class="btn-outline px-6 sm:px-8 py-3 rounded-full font-medium text-base sm:text-lg shadow-lg hover:shadow-xl transition-all">
+                    加入应援
+                </a>
+            </div>
+        </div>
+        
+        <!-- 滚动指示器 -->
+        <div class="scroll-indicator text-white mt-8 sm:mt-0">
+            <i class="fas fa-chevron-down text-xl sm:text-2xl"></i>
+        </div>
+    </section>
+
+    <!-- 个人资料 -->
+    <section id="profile" class="py-16 sm:py-20 bg-white">
+        <div class="container mx-auto px-4 sm:px-6">
+            <div class="section">
+                <h2 class="text-3xl sm:text-4xl font-bold mb-8 sm:mb-12 text-center">
+                    <span class="text-gradient">个人资料</span>
+                </h2>
+                
+                <div class="flex flex-col items-center gap-8 sm:gap-10">
+                    <div class="w-full sm:w-2/3 md:w-1/3 max-w-xs">
+                        <div class="relative mx-auto">
+                            <img src="https://p3-doubao-search-sign.byteimg.com/tos-cn-i-xv4ileqgde/19d2939b30684cafadd7773467863148~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1787734383&x-signature=LNpJxIgCKmzRBnggFcGs5KKjY4Y%3D" alt="Hanser" class="w-full h-auto rounded-2xl shadow-xl">
+                            <div class="absolute -bottom-4 -right-4 bg-pink-500 text-white rounded-full w-20 h-20 flex items-center justify-center shadow-lg">
+                                <div class="text-center">
+                                    <div class="text-lg sm:text-xl font-bold">5.15</div>
+                                    <div class="text-xs">生日</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="w-full md:w-2/3">
+                        <div class="bg-gray-50 rounded-2xl p-6 sm:p-8 shadow-lg">
+                            <h3 class="text-xl sm:text-2xl font-bold mb-4 text-pink-500">关于Hanser</h3>
+                            <p class="text-gray-700 mb-4 sm:mb-6 leading-relaxed text-sm sm:text-base">
+                                Hanser，中国内地配音演员、歌手、虚拟主播，被粉丝亲切称为"小天使"、"憨色"。她的声线独特，带有鼻音，被称为"国产钉宫理惠"。作为中配银魂的策划、台本，以及神乐的配音，她的表现备受好评。
+                            </p>
+                            <p class="text-gray-700 mb-6 leading-relaxed text-sm sm:text-base">
+                                2011年3月22日，Hanser发布了自己在B站的第一个视频。2020年12月，她正式加入VirtuaReal Star。2021年10月3日，Hanser于杭州运河大剧院举办《海上油菜花》个人演唱会。2022年9月20日，她的首张个人音乐专辑《一抹憨色》电子版上线网易云。
+                            </p>
+                            
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
+                                <div class="bg-white rounded-lg p-3 sm:p-4 text-center shadow">
+                                    <div class="text-2xl sm:text-3xl font-bold text-pink-500 mb-1">400万+</div>
+                                    <div class="text-gray-600 text-xs sm:text-sm">B站粉丝</div>
+                                </div>
+                                <div class="bg-white rounded-lg p-3 sm:p-4 text-center shadow">
+                                    <div class="text-2xl sm:text-3xl font-bold text-blue-500 mb-1">3</div>
+                                    <div class="text-gray-600 text-xs sm:text-sm">百大UP主</div>
+                                </div>
+                                <div class="bg-white rounded-lg p-3 sm:p-4 text-center shadow">
+                                    <div class="text-2xl sm:text-3xl font-bold text-purple-500 mb-1">1</div>
+                                    <div class="text-gray-600 text-xs sm:text-sm">个人专辑</div>
+                                </div>
+                                <div class="bg-white rounded-lg p-3 sm:p-4 text-center shadow">
+                                    <div class="text-2xl sm:text-3xl font-bold text-green-500 mb-1">∞</div>
+                                    <div class="text-gray-600 text-xs sm:text-sm">毛怪的爱</div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex flex-wrap gap-2 sm:gap-3">
+                                <span class="bg-pink-100 text-pink-800 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm">配音演员</span>
+                                <span class="bg-blue-100 text-blue-800 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm">歌手</span>
+                                <span class="bg-purple-100 text-purple-800 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm">虚拟主播</span>
+                                <span class="bg-green-100 text-green-800 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm">B站UP主</span>
+                                <span class="bg-yellow-100 text-yellow-800 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm">翻译</span>
+                                <span class="bg-red-100 text-red-800 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm">音乐后期</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 代表作品 -->
+    <section id="works" class="py-16 sm:py-20 bg-gray-50">
+        <div class="container mx-auto px-4 sm:px-6">
+            <div class="section">
+                <h2 class="text-3xl sm:text-4xl font-bold mb-8 sm:mb-12 text-center">
+                    <span class="text-gradient">代表作品</span>
+                </h2>
+                
+                <!-- 音乐作品 -->
+                <div class="mb-12 sm:mb-16">
+                    <h3 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-center text-pink-500">音乐作品</h3>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                        <!-- 音乐卡片1 -->
+                        <div class="music-card bg-white rounded-xl overflow-hidden shadow-lg" onclick="openMusicModal('Moon Halo')">
+                            <div class="relative">
+                                <img src="https://p11-doubao-search-sign.byteimg.com/labis/35d70d026161fbc76ae47deb6e4af179~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1787734383&x-signature=03AQvM8aKfJ6xj9AYuh3O47alEc%3D" alt="Moon Halo" class="w-full h-40 sm:h-48 object-cover">
+                                <div class="absolute top-2 right-2 bg-pink-500 text-white rounded-full w-10 h-10 flex items-center justify-center">
+                                    <i class="fas fa-play"></i>
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <h4 class="text-lg sm:text-xl font-bold mb-1">Moon Halo</h4>
+                                <p class="text-gray-600 mb-2 text-sm sm:text-base">崩坏3《薪炎永燃》动画短片印象曲</p>
+                                <div class="flex items-center">
+                                    <span class="bg-pink-100 text-pink-800 px-2 py-1 rounded text-xs sm:text-sm">feat. 茶理理, TetraCalyx</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 音乐卡片2 -->
+                        <div class="music-card bg-white rounded-xl overflow-hidden shadow-lg" onclick="openMusicModal('达拉崩吧')">
+                            <div class="relative">
+                                <img src="https://p11-doubao-search-sign.byteimg.com/labis/ef261a714d55dea7367c38d0c949df24~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1787734383&x-signature=Cv88u%2FY4OSxWPFyD9%2FYLjWApbtk%3D" alt="达拉崩吧" class="w-full h-40 sm:h-48 object-cover">
+                                <div class="absolute top-2 right-2 bg-pink-500 text-white rounded-full w-10 h-10 flex items-center justify-center">
+                                    <i class="fas fa-play"></i>
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <h4 class="text-lg sm:text-xl font-bold mb-1">达拉崩吧</h4>
+                                <p class="text-gray-600 mb-2 text-sm sm:text-base">经典翻唱作品</p>
+                                <div class="flex items-center">
+                                    <span class="bg-pink-100 text-pink-800 px-2 py-1 rounded text-xs sm:text-sm">翻唱</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 音乐卡片3 -->
+                        <div class="music-card bg-white rounded-xl overflow-hidden shadow-lg" onclick="openMusicModal('晴空一尾鲤')">
+                            <div class="relative">
+                                <img src="https://p11-doubao-search-sign.byteimg.com/labis/49459f077df9231590e42c2638576625~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1787734383&x-signature=RbmHG3CnErZkKJHLsOgzU%2FOaJRs%3D" alt="晴空一尾鲤" class="w-full h-40 sm:h-48 object-cover">
+                                <div class="absolute top-2 right-2 bg-pink-500 text-white rounded-full w-10 h-10 flex items-center justify-center">
+                                    <i class="fas fa-play"></i>
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <h4 class="text-lg sm:text-xl font-bold mb-1">晴空一尾鲤</h4>
+                                <p class="text-gray-600 mb-2 text-sm sm:text-base">原创单曲</p>
+                                <div class="flex items-center">
+                                    <span class="bg-pink-100 text-pink-800 px-2 py-1 rounded text-xs sm:text-sm">原创</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-6 sm:mt-8">
+                        <button class="btn-outline px-5 sm:px-6 py-2 rounded-full font-medium shadow hover:shadow-lg transition-all text-sm sm:text-base">
+                            查看更多音乐作品
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 配音作品 -->
+                <div>
+                    <h3 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-center text-blue-500">配音作品</h3>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                        <!-- 配音卡片1 -->
+                        <div class="bg-white rounded-xl overflow-hidden shadow-lg">
+                            <img src="https://p11-doubao-search-sign.byteimg.com/tos-cn-i-xv4ileqgde/8c5a1a234a6c4222a51d0cfc56064569~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1787734383&x-signature=5iUfSNJmA5OB7zZur5Yjs3LgczA%3D" alt="崩坏3" class="w-full h-36 sm:h-40 object-cover">
+                            <div class="p-4">
+                                <h4 class="text-base sm:text-lg font-bold mb-1">崩坏3</h4>
+                                <p class="text-gray-600 mb-2 text-xs sm:text-sm">布洛妮娅·扎伊切克</p>
+                                <div class="flex items-center">
+                                    <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">游戏</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 配音卡片2 -->
+                        <div class="bg-white rounded-xl overflow-hidden shadow-lg">
+                            <img src="https://p3-doubao-search-sign.byteimg.com/tos-cn-i-xv4ileqgde/b6ada09bf88d4edb922417cf3b00f0bc~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1787734383&x-signature=Gf05MYhayLTXschl0pB0dmg9AM0%3D" alt="银魂" class="w-full h-36 sm:h-40 object-cover">
+                            <div class="p-4">
+                                <h4 class="text-base sm:text-lg font-bold mb-1">银魂</h4>
+                                <p class="text-gray-600 mb-2 text-xs sm:text-sm">神乐（中配版）</p>
+                                <div class="flex items-center">
+                                    <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">动画</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 配音卡片3 -->
+                        <div class="bg-white rounded-xl overflow-hidden shadow-lg">
+                            <img src="https://p26-doubao-search-sign.byteimg.com/tos-cn-i-xv4ileqgde/19d2939b30684cafadd77734383&x-signature=GnTaj0cLPjkgcaBbMIY4fkj%2FGxc%3D" alt="崩坏：星穹铁道" class="w-full h-36 sm:h-40 object-cover">
+                            <div class="p-4">
+                                <h4 class="text-base sm:text-lg font-bold mb-1">崩坏：星穹铁道</h4>
+                                <p class="text-gray-600 mb-2 text-xs sm:text-sm">银狼</p>
+                                <div class="flex items-center">
+                                    <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">游戏</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 配音卡片4 -->
+                        <div class="bg-white rounded-xl overflow-hidden shadow-lg">
+                            <img src="https://p11-doubao-search-sign.byteimg.com/tos-cn-i-xv4ileqgde/ea3389c6c2dc4539831459b22a1842b0~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1787734383&x-signature=4cNivwCeL864rj9XbMdOIgyAE2M%3D" alt="电器少女" class="w-full h-36 sm:h-40 object-cover">
+                            <div class="p-4">
+                                <h4 class="text-base sm:text-lg font-bold mb-1">电器少女</h4>
+                                <p class="text-gray-600 mb-2 text-xs sm:text-sm">主要配音</p>
+                                <div class="flex items-center">
+                                    <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">动画</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-6 sm:mt-8">
+                        <button class="btn-outline px-5 sm:px-6 py-2 rounded-full font-medium shadow hover:shadow-lg transition-all text-sm sm:text-base">
+                            查看更多配音作品
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 最新动态 -->
+    <section id="news" class="py-16 sm:py-20 bg-white">
+        <div class="container mx-auto px-4 sm:px-6">
+            <div class="section">
+                <h2 class="text-3xl sm:text-4xl font-bold mb-8 sm:mb-12 text-center">
+                    <span class="text-gradient">最新动态</span>
+                </h2>
+                
+                <div class="max-w-4xl mx-auto">
+                    <!-- 时间轴 -->
+                    <div class="timeline">
+                        <!-- 动态1 -->
+                        <div class="timeline-item">
+                            <div class="bg-white rounded-xl p-4 sm:p-6 shadow-lg">
+                                <div class="flex flex-col sm:flex-row sm:justify-between items-start mb-3 sm:mb-4">
+                                    <h3 class="text-lg sm:text-xl font-bold text-pink-500 mb-2 sm:mb-0">《Sn2KE·贪饕猎手》发布</h3>
+                                    <span class="bg-pink-100 text-pink-800 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm">2025-02-03</span>
+                                </div>
+                                <p class="text-gray-700 mb-3 sm:mb-4 text-sm sm:text-base leading-relaxed">
+                                    Hanser和茶理理共同演唱的歌曲《Sn2KE·贪饕猎手》正式发布，这首歌曲融合了电子和摇滚元素，展现了Hanser多样化的演唱风格。
+                                </p>
+                                <div class="flex justify-end">
+                                    <button class="text-pink-500 hover:text-pink-700 font-medium flex items-center text-sm sm:text-base">
+                                        查看详情 <i class="fas fa-arrow-right ml-2"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 动态2 -->
+                        <div class="timeline-item">
+                            <div class="bg-white rounded-xl p-4 sm:p-6 shadow-lg">
+                                <div class="flex flex-col sm:flex-row sm:justify-between items-start mb-3 sm:mb-4">
+                                    <h3 class="text-lg sm:text-xl font-bold text-pink-500 mb-2 sm:mb-0">参加Utopia Festi 2025游戏音乐节</h3>
+                                    <span class="bg-pink-100 text-pink-800 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm">2025-05-17</span>
+                                </div>
+                                <p class="text-gray-700 mb-3 sm:mb-4 text-sm sm:text-base leading-relaxed">
+                                    Hanser将参加2025年5月17日-18日举办的Utopia Festi游戏音乐节，与其他人气歌手一起为粉丝带来精彩演出。这是她今年的重要音乐活动之一。
+                                </p>
+                                <div class="flex justify-end">
+                                    <button class="text-pink-500 hover:text-pink-700 font-medium flex items-center text-sm sm:text-base">
+                                        查看详情 <i class="fas fa-arrow-right ml-2"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 动态3 -->
+                        <div class="timeline-item">
+                            <div class="bg-white rounded-xl p-4 sm:p-6 shadow-lg">
+                                <div class="flex flex-col sm:flex-row sm:justify-between items-start mb-3 sm:mb-4">
+                                    <h3 class="text-lg sm:text-xl font-bold text-pink-500 mb-2 sm:mb-0">《室内系的TrackMaker(钢琴版)》发布</h3>
+                                    <span class="bg-pink-100 text-pink-800 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm">2025-07-21</span>
+                                </div>
+                                <p class="text-gray-700 mb-3 sm:mb-4 text-sm sm:text-base leading-relaxed">
+                                    Hanser最新单曲《室内系的TrackMaker(钢琴版)》正式发布，这首歌曲以钢琴伴奏为主，展现了Hanser温柔的声线，受到粉丝们的热烈欢迎。
+                                </p>
+                                <div class="flex justify-end">
+                                    <button class="text-pink-500 hover:text-pink-700 font-medium flex items-center text-sm sm:text-base">
+                                        查看详情 <i class="fas fa-arrow-right ml-2"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 动态4 -->
+                        <div class="timeline-item">
+                            <div class="bg-white rounded-xl p-4 sm:p-6 shadow-lg">
+                                <div class="flex flex-col sm:flex-row sm:justify-between items-start mb-3 sm:mb-4">
+                                    <h3 class="text-lg sm:text-xl font-bold text-pink-500 mb-2 sm:mb-0">B站粉丝突破400万</h3>
+                                    <span class="bg-pink-100 text-pink-800 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm">2023-08-29</span>
+                                </div>
+                                <p class="text-gray-700 mb-3 sm:mb-4 text-sm sm:text-base leading-relaxed">
+                                    Hanser为了纪念B站粉丝达到400万，在b站发布了参加2023年BW的vlog，并且cos了《崩坏:星穹铁道》里的银狼，感谢粉丝们一直以来的支持。
+                                </p>
+                                <div class="flex justify-end">
+                                    <button class="text-pink-500 hover:text-pink-700 font-medium flex items-center text-sm sm:text-base">
+                                        查看详情 <i class="fas fa-arrow-right ml-2"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-8 sm:mt-10">
+                        <button class="btn-outline px-5 sm:px-6 py-2 rounded-full font-medium shadow hover:shadow-lg transition-all text-sm sm:text-base">
+                            查看更多动态
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 活动日程 -->
+    <section id="activities" class="py-16 sm:py-20 bg-gray-50">
+        <div class="container mx-auto px-4 sm:px-6">
+            <div class="section">
+                <h2 class="text-3xl sm:text-4xl font-bold mb-8 sm:mb-12 text-center">
+                    <span class="text-gradient">活动日程</span>
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                    <!-- 活动卡片1 -->
+                    <div class="bg-white rounded-xl overflow-hidden shadow-lg">
+                        <div class="relative">
+                            <div class="absolute top-0 left-0 bg-pink-500 text-white p-2 sm:p-3 rounded-br-lg">
+                                <div class="text-lg sm:text-xl font-bold">05月</div>
+                                <div class="text-xs sm:text-sm">17日</div>
+                            </div>
+                            <img src="https://p11-doubao-search-sign.byteimg.com/labis/35d70d026161fbc76ae47deb6e4af179~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1787734383&x-signature=03AQvM8aKfJ6xj9AYuh3O47alEc%3D" alt="Utopia Festi 2025" class="w-full h-40 sm:h-48 object-cover">
+                        </div>
+                        <div class="p-4 sm:p-6">
+                            <h3 class="text-lg sm:text-xl font-bold mb-2">Utopia Festi 2025游戏音乐节</h3>
+                            <div class="flex items-center mb-2 sm:mb-3">
+                                <i class="fas fa-map-marker-alt text-pink-500 mr-2"></i>
+                                <span class="text-gray-700 text-sm sm:text-base">待定</span>
+                            </div>
+                            <div class="flex items-center mb-3 sm:mb-4">
+                                <i class="fas fa-clock text-pink-500 mr-2"></i>
+                                <span class="text-gray-700 text-sm sm:text-base">14:00-21:00</span>
+                            </div>
+                            <p class="text-gray-600 mb-4 text-sm sm:text-base leading-relaxed">
+                                Hanser将参加Utopia Festi 2025游戏音乐节，与众多游戏音乐制作人、歌手一起，为粉丝带来精彩的演出。
+                            </p>
+                            <button class="w-full btn-primary py-2 rounded-lg text-white font-medium text-sm sm:text-base">
+                                预约提醒
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 活动卡片2 -->
+                    <div class="bg-white rounded-xl overflow-hidden shadow-lg">
+                        <div class="relative">
+                            <div class="absolute top-0 left-0 bg-blue-500 text-white p-2 sm:p-3 rounded-br-lg">
+                                <div class="text-lg sm:text-xl font-bold">05月</div>
+                                <div class="text-xs sm:text-sm">18日</div>
+                            </div>
+                            <img src="https://p11-doubao-search-sign.byteimg.com/labis/ef261a714d55dea7367c38d0c949df24~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1787734383&x-signature=Cv88u%2FY4OSxWPFyD9%2FYLjWApbtk%3D" alt="Utopia Festi 2025 Day 2" class="w-full h-40 sm:h-48 object-cover">
+                        </div>
+                        <div class="p-4 sm:p-6">
+                            <h3 class="text-lg sm:text-xl font-bold mb-2">Utopia Festi 2025游戏音乐节 Day 2</h3>
+                            <div class="flex items-center mb-2 sm:mb-3">
+                                <i class="fas fa-map-marker-alt text-pink-500 mr-2"></i>
+                                <span class="text-gray-700 text-sm sm:text-base">待定</span>
+                            </div>
+                            <div class="flex items-center mb-3 sm:mb-4">
+                                <i class="fas fa-clock text-pink-500 mr-2"></i>
+                                <span class="text-gray-700 text-sm sm:text-base">14:00-21:00</span>
+                            </div>
+                            <p class="text-gray-600 mb-4 text-sm sm:text-base leading-relaxed">
+                                Utopia Festi 2025游戏音乐节第二天，Hanser将继续为粉丝带来精彩的演出，敬请期待。
+                            </p>
+                            <button class="w-full btn-primary py-2 rounded-lg text-white font-medium text-sm sm:text-base">
+                                预约提醒
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 活动卡片3 -->
+                    <div class="bg-white rounded-xl overflow-hidden shadow-lg">
+                        <div class="relative">
+                            <div class="absolute top-0 left-0 bg-purple-500 text-white p-2 sm:p-3 rounded-br-lg">
+                                <div class="text-lg sm:text-xl font-bold">03月</div>
+                                <div class="text-xs sm:text-sm">05日</div>
+                            </div>
+                            <img src="https://p11-doubao-search-sign.byteimg.com/labis/49459f077df9231590e42c2638576625~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1787734383&x-signature=RbmHG3CnErZkKJHLsOgzU%2FOaJRs%3D" alt="2025 IBTE广州潮玩展" class="w-full h-40 sm:h-48 object-cover">
+                        </div>
+                        <div class="p-4 sm:p-6">
+                            <h3 class="text-lg sm:text-xl font-bold mb-2">2025 IBTE广州潮玩展</h3>
+                            <div class="flex items-center mb-2 sm:mb-3">
+                                <i class="fas fa-map-marker-alt text-pink-500 mr-2"></i>
+                                <span class="text-gray-700 text-sm sm:text-base">广州·guangjiaohui展馆C区</span>
+                            </div>
+                            <div class="flex items-center mb-3 sm:mb-4">
+                                <i class="fas fa-clock text-pink-500 mr-2"></i>
+                                <span class="text-gray-700 text-sm sm:text-base">09:00-18:00</span>
+                            </div>
+                            <p class="text-gray-600 mb-4 text-sm sm:text-base leading-relaxed">
+                                Hanser将作为嘉宾出席2025 IBTE广州潮玩展，与粉丝见面互动，现场还有签名会等活动。
+                            </p>
+                            <button class="w-full btn-primary py-2 rounded-lg text-white font-medium text-sm sm:text-base">
+                                预约提醒
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-8 sm:mt-10">
+                    <button class="btn-outline px-5 sm:px-6 py-2 rounded-full font-medium shadow hover:shadow-lg transition-all text-sm sm:text-base">
+                        查看更多活动
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 粉丝互动区 -->
+    <section id="fan-interaction" class="py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="section">
+                <h2 class="text-4xl font-bold mb-12 text-center">
+                    <span class="text-gradient">粉丝互动</span>
+                </h2>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                    <!-- 留言板 -->
+                    <div>
+                        <h3 class="text-2xl font-bold mb-6 text-center text-pink-500">给Hanser的留言</h3>
+                        
+                        <div class="bg-gray-50 rounded-xl p-6 shadow-lg mb-6">
+                            <textarea id="message-input" class="message-input w-full h-32 p-4 rounded-lg border border-gray-300 focus:outline-none" placeholder="在这里写下你想对Hanser说的话..."></textarea>
+                            <div class="flex justify-between items-center mt-4">
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="anonymous" class="mr-2">
+                                    <label for="anonymous" class="text-gray-700 text-sm">匿名留言</label>
+                                </div>
+                                <button id="send-message" class="btn-primary px-6 py-2 rounded-lg text-white font-medium">
+                                    发送留言
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <!-- 留言1 -->
+                            <div class="bg-white rounded-xl p-4 shadow">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center text-pink-500 font-bold mr-3">
+                                            M
+                                        </div>
+                                        <span class="font-medium">毛怪一号</span>
+                                    </div>
+                                    <span class="text-gray-500 text-sm">2025-02-28</span>
+                                </div>
+                                <p class="text-gray-700">
+                                    Hanser小天使！期待你的下一次直播，最近出新歌了吗？超级喜欢你的声音，要一直开心哦！
+                                </p>
+                                <div class="flex items-center mt-3">
+                                    <button class="flex items-center text-gray-500 hover:text-pink-500">
+                                        <i class="far fa-heart mr-1"></i> <span>128</span>
+                                    </button>
+                                    <button class="flex items-center text-gray-500 hover:text-pink-500 ml-4">
+                                        <i class="far fa-comment mr-1"></i> <span>回复</span>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- 留言2 -->
+                            <div class="bg-white rounded-xl p-4 shadow">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-500 font-bold mr-3">
+                                            G
+                                        </div>
+                                        <span class="font-medium">憨憨怪</span>
+                                    </div>
+                                    <span class="text-gray-500 text-sm">2025-02-27</span>
+                                </div>
+                                <p class="text-gray-700">
+                                    刚刚听了《Sn2KE·贪饕猎手》，超好听！Hanser的声音还是那么治愈，期待今年的演唱会！
+                                </p>
+                                <div class="flex items-center mt-3">
+                                    <button class="flex items-center text-gray-500 hover:text-pink-500">
+                                        <i class="far fa-heart mr-1"></i> <span>96</span>
+                                    </button>
+                                    <button class="flex items-center text-gray-500 hover:text-pink-500 ml-4">
+                                        <i class="far fa-comment mr-1"></i> <span>回复</span>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- 留言3 -->
+                            <div class="bg-white rounded-xl p-4 shadow">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-500 font-bold mr-3">
+                                            A
+                                        </div>
+                                        <span class="font-medium">匿名用户</span>
+                                    </div>
+                                    <span class="text-gray-500 text-sm">2025-02-26</span>
+                                </div>
+                                <p class="text-gray-700">
+                                    从银魂中配开始关注Hanser，这么多年了，你的声音一直陪伴着我，希望你能一直走下去，我们毛怪永远支持你！
+                                </p>
+                                <div class="flex items-center mt-3">
+                                    <button class="flex items-center text-gray-500 hover:text-pink-500">
+                                        <i class="far fa-heart mr-1"></i> <span>156</span>
+                                    </button>
+                                    <button class="flex items-center text-gray-500 hover:text-pink-500 ml-4">
+                                        <i class="far fa-comment mr-1"></i> <span>回复</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center mt-6">
+                            <button class="btn-outline px-6 py-2 rounded-full font-medium shadow hover:shadow-lg transition-all">
+                                查看更多留言
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 粉丝作品展示 -->
+                    <div>
+                        <h3 class="text-2xl font-bold mb-6 text-center text-blue-500">粉丝作品展示</h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- 粉丝作品1 -->
+                            <div class="fan-art-card rounded-xl overflow-hidden shadow-lg">
+                                <img src="https://p26-doubao-search-sign.byteimg.com/tos-cn-i-xv4ileqgde/ea3389c6c2dc4539831459b22a1842b0~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1787734383&x-signature=iN5bXb3wCWrghNawf4phWJihuC4%3D" alt="Hanser Fan Art" class="w-full h-48 object-cover">
+                                <div class="fan-art-overlay">
+                                    <div class="fan-art-text">
+                                        <h4 class="font-bold mb-2">水手服Hanser</h4>
+                                        <p>by 画师小A</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 粉丝作品2 -->
+                            <div class="fan-art-card rounded-xl overflow-hidden shadow-lg">
+                                <img src="https://p3-doubao-search-sign.byteimg.com/tos-cn-i-xv4ileqgde/19d2939b30684cafadd7773467863148~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1787734383&x-signature=LNpJxIgCKmzRBnggFcGs5KKjY4Y%3D" alt="Hanser Fan Art" class="w-full h-48 object-cover">
+                                <div class="fan-art-overlay">
+                                    <div class="fan-art-text">
+                                        <h4 class="font-bold mb-2">微笑的Hanser</h4>
+                                        <p>by 画师小B</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 粉丝作品3 -->
+                            <div class="fan-art-card rounded-xl overflow-hidden shadow-lg">
+                                <img src="https://p11-doubao-search-sign.byteimg.com/tos-cn-i-xv4ileqgde/b6ada09bf88d4edb922417cf3b00f0bc~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1787734383&x-signature=XcJkO5nljjcQiyyxok2UfxoszO4%3D" alt="Hanser Fan Art" class="w-full h-48 object-cover">
+                                <div class="fan-art-overlay">
+                                    <div class="fan-art-text">
+                                        <h4 class="font-bold mb-2">可爱Hanser</h4>
+                                        <p>by 画师小C</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 粉丝作品4 -->
+                            <div class="fan-art-card rounded-xl overflow-hidden shadow-lg">
+                                <img src="https://p11-doubao-search-sign.byteimg.com/tos-cn-i-xv4ileqgde/8c5a1a234a6c4222a51d0cfc56064569~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1787734383&x-signature=5iUfSNJmA5OB7zZur5Yjs3LgczA%3D" alt="Hanser Fan Art" class="w-full h-48 object-cover">
+                                <div class="fan-art-overlay">
+                                    <div class="fan-art-text">
+                                        <h4 class="font-bold mb-2">舞台上的Hanser</h4>
+                                        <p>by 画师小D</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center mt-6">
+                            <button class="btn-outline px-6 py-2 rounded-full font-medium shadow hover:shadow-lg transition-all">
+                                查看更多作品
+                            </button>
+                        </div>
+                        
+                        <!-- 应援活动报名 -->
+                        <div class="mt-10 bg-gradient rounded-xl p-6 shadow-lg text-white">
+                            <h3 class="text-xl font-bold mb-4">应援活动报名</h3>
+                            <p class="mb-6">
+                                想要为Hanser准备特别的应援活动吗？填写下方表单，加入我们的应援团队！
+                            </p>
+                            <form>
+                                <div class="mb-4">
+                                    <label for="name" class="block mb-2 text-sm font-medium">昵称</label>
+                                    <input type="text" id="name" class="w-full px-4 py-2 rounded-lg bg-white bg-opacity-20 border border-white border-opacity-30 text-white placeholder-white placeholder-opacity-70 focus:outline-none focus:border-opacity-100" placeholder="请输入你的昵称">
+                                </div>
+                                <div class="mb-4">
+                                    <label for="contact" class="block mb-2 text-sm font-medium">联系方式</label>
+                                    <input type="text" id="contact" class="w-full px-4 py-2 rounded-lg bg-white bg-opacity-20 border border-white border-opacity-30 text-white placeholder-white placeholder-opacity-70 focus:outline-none focus:border-opacity-100" placeholder="请输入你的联系方式">
+                                </div>
+                                <div class="mb-6">
+                                    <label for="activity" class="block mb-2 text-sm font-medium">活动建议</label>
+                                    <textarea id="activity" class="w-full h-24 px-4 py-2 rounded-lg bg-white bg-opacity-20 border border-white border-opacity-30 text-white placeholder-white placeholder-opacity-70 focus:outline-none focus:border-opacity-100" placeholder="请输入你对活动的建议..."></textarea>
+                                </div>
+                                <button type="submit" class="w-full bg-white text-pink-500 py-2 rounded-lg font-bold hover:bg-opacity-90 transition-all">
+                                    提交报名
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 数据中心 -->
+    <section id="data" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="section">
+                <h2 class="text-4xl font-bold mb-12 text-center">
+                    <span class="text-gradient">数据中心</span>
+                </h2>
+                
+                <!-- 数据统计卡片 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                    <div class="stat-card bg-gradient-to-r from-pink-500 to-pink-700">
+                        <div class="stat-number" id="fans-count">4,000,000+</div>
+                        <div class="stat-label">B站粉丝数</div>
+                    </div>
+                    <div class="stat-card bg-gradient-to-r from-blue-500 to-blue-700">
+                        <div class="stat-number" id="views-count">1,200,000,000+</div>
+                        <div class="stat-label">总播放量</div>
+                    </div>
+                    <div class="stat-card bg-gradient-to-r from-purple-500 to-purple-700">
+                        <div class="stat-number" id="videos-count">1,500+</div>
+                        <div class="stat-label">视频作品数</div>
+                    </div>
+                    <div class="stat-card bg-gradient-to-r from-green-500 to-green-700">
+                        <div class="stat-number" id="songs-count">50+</div>
+                        <div class="stat-label">音乐作品数</div>
+                    </div>
+                </div>
+                
+                <!-- 粉丝分布热力图 -->
+                <div class="bg-white rounded-xl p-6 shadow-lg mb-12">
+                    <h3 class="text-2xl font-bold mb-6 text-center text-pink-500">全球粉丝分布</h3>
+                    <div id="fan-map"></div>
+                </div>
+                
+                <!-- 互动数据统计 -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- 互动趋势图 -->
+                    <div class="bg-white rounded-xl p-6 shadow-lg">
+                        <h3 class="text-xl font-bold mb-4 text-center text-blue-500">互动趋势</h3>
+                        <canvas id="interaction-chart" height="250"></canvas>
+                    </div>
+                    
+                    <!-- 粉丝增长图 -->
+                    <div class="bg-white rounded-xl p-6 shadow-lg">
+                        <h3 class="text-xl font-bold mb-4 text-center text-purple-500">粉丝增长</h3>
+                        <canvas id="fans-growth-chart" height="250"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Hanser应援站</h3>
+                    <p class="text-gray-400 mb-4">
+                        毛怪的家，为Hanser提供最全面的应援支持
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-pink-500 transition-colors">
+                            <i class="fab fa-bilibili text-2xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-pink-500 transition-colors">
+                            <i class="fab fa-weibo text-2xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-pink-500 transition-colors">
+                            <i class="fab fa-weixin text-2xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-pink-500 transition-colors">
+                            <i class="fab fa-qq text-2xl"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-xl font-bold mb-4">快速链接</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#home" class="text-gray-400 hover:text-pink-500 transition-colors">首页</a></li>
+                        <li><a href="#profile" class="text-gray-400 hover:text-pink-500 transition-colors">个人资料</a></li>
+                        <li><a href="#works" class="text-gray-400 hover:text-pink-500 transition-colors">代表作品</a></li>
+                        <li><a href="#news" class="text-gray-400 hover:text-pink-500 transition-colors">最新动态</a></li>
+                        <li><a href="#activities" class="text-gray-400 hover:text-pink-500 transition-colors">活动日程</a></li>
+                        <li><a href="#fan-interaction" class="text-gray-400 hover:text-pink-500 transition-colors">粉丝互动</a></li>
+                        <li><a href="#data" class="text-gray-400 hover:text-pink-500 transition-colors">数据中心</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-xl font-bold mb-4">联系我们</h3>
+                    <ul class="space-y-2">
+                        <li class="flex items-center">
+                            <i class="fas fa-envelope text-pink-500 mr-2"></i>
+                            <span class="text-gray-400">contact@hanser-fan.com</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-phone text-pink-500 mr-2"></i>
+                            <span class="text-gray-400">+86 123 4567 8910</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-map-marker-alt text-pink-500 mr-2"></i>
+                            <span class="text-gray-400">中国上海</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center">
+                <p class="text-gray-500">
+                    &copy; 2025 Hanser应援站 - 毛怪的家. 版权所有.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 音乐播放模态框 -->
+    <div id="music-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div class="text-center">
+                <h3 class="text-2xl font-bold mb-4" id="modal-title">Moon Halo</h3>
+                <div class="aspect-w-16 aspect-h-9 mb-6">
+                    <div class="bg-gray-200 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-music text-5xl text-gray-400"></i>
+                    </div>
+                </div>
+                <div class="flex justify-center space-x-4">
+                    <button class="bg-gray-200 hover:bg-gray-300 rounded-full w-12 h-12 flex items-center justify-center">
+                        <i class="fas fa-step-backward"></i>
+                    </button>
+                    <button class="bg-pink-500 hover:bg-pink-600 text-white rounded-full w-16 h-16 flex items-center justify-center">
+                        <i class="fas fa-play text-xl"></i>
+                    </button>
+                    <button class="bg-gray-200 hover:bg-gray-300 rounded-full w-12 h-12 flex items-center justify-center">
+                        <i class="fas fa-step-forward"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 加载动画
+            setTimeout(function() {
+                document.querySelector('.loader').classList.add('hidden');
+            }, 1500);
+            
+            // 导航链接激活状态
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            window.addEventListener('scroll', function() {
+                let current = '';
+                
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    const sectionHeight = section.clientHeight;
+                    if (pageYOffset >= (sectionTop - sectionHeight / 3)) {
+                        current = section.getAttribute('id');
+                    }
+                });
+                
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').substring(1) === current) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+            
+            // 移动端菜单切换
+            const menuToggle = document.getElementById('menu-toggle');
+            const mobileMenu = document.getElementById('mobile-menu');
+            
+            menuToggle.addEventListener('click', function() {
+                mobileMenu.classList.toggle('hidden');
+            });
+            
+            // 平滑滚动
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 70,
+                        behavior: 'smooth'
+                    });
+                    
+                    // 如果是移动端，点击后关闭菜单
+                    if (window.innerWidth < 768) {
+                        mobileMenu.classList.add('hidden');
+                    }
+                });
+            });
+            
+            // 滚动动画
+            const observerOptions = {
+                threshold: 0.1
+            };
+            
+            const observer = new IntersectionObserver(function(entries, observer) {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+            
+            document.querySelectorAll('.section').forEach(section => {
+                observer.observe(section);
+            });
+            
+            // 留言板功能
+            const sendMessageBtn = document.getElementById('send-message');
+            const messageInput = document.getElementById('message-input');
+            
+            sendMessageBtn.addEventListener('click', function() {
+                const message = messageInput.value.trim();
+                if (message) {
+                    alert('留言已发送！');
+                    messageInput.value = '';
+                } else {
+                    alert('请输入留言内容！');
+                }
+            });
+            
+            // 音乐模态框
+            const musicModal = document.getElementById('music-modal');
+            const closeModal = document.querySelector('.modal .close');
+            
+            closeModal.addEventListener('click', function() {
+                musicModal.style.display = 'none';
+            });
+            
+            window.addEventListener('click', function(event) {
+                if (event.target === musicModal) {
+                    musicModal.style.display = 'none';
+                }
+            });
+            
+            // 初始化Three.js背景
+            initThreeBackground();
+            
+            // 初始化图表
+            initCharts();
+        });
+        
+        // 打开音乐模态框
+        function openMusicModal(title) {
+            const musicModal = document.getElementById('music-modal');
+            const modalTitle = document.getElementById('modal-title');
+            
+            modalTitle.textContent = title;
+            musicModal.style.display = 'block';
+        }
+        
+        // Three.js背景
+        function initThreeBackground() {
+            const canvas = document.getElementById('bg-canvas');
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            
+            const renderer = new THREE.WebGLRenderer({
+                canvas: canvas,
+                alpha: true,
+                antialias: true
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            
+            // 创建粒子
+            const particlesGeometry = new THREE.BufferGeometry();
+            const particlesCount = 1500;
+            
+            const posArray = new Float32Array(particlesCount * 3);
+            
+            for (let i = 0; i < particlesCount * 3; i++) {
+                posArray[i] = (Math.random() - 0.5) * 5;
+            }
+            
+            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            
+            const particlesMaterial = new THREE.PointsMaterial({
+                size: 0.005,
+                color: 0xff7eb9,
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+            scene.add(particlesMesh);
+            
+            camera.position.z = 2;
+            
+            // 动画
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                particlesMesh.rotation.y += 0.001;
+                
+                renderer.render(scene, camera);
+            }
+            
+            animate();
+            
+            // 响应窗口大小变化
+            window.addEventListener('resize', function() {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+            
+            // 鼠标移动效果
+            document.addEventListener('mousemove', function(event) {
+                const mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+                const mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+                
+                gsap.to(particlesMesh.rotation, {
+                    x: mouseY * 0.1,
+                    y: mouseX * 0.1,
+                    duration: 2
+                });
+            });
+        }
+        
+        // 初始化图表
+        function initCharts() {
+            // 互动趋势图
+            const interactionCtx = document.getElementById('interaction-chart').getContext('2d');
+            const interactionChart = new Chart(interactionCtx, {
+                type: 'line',
+                data: {
+                    labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
+                    datasets: [{
+                        label: '评论数',
+                        data: [1200, 1900, 3000, 5000, 4000, 6000],
+                        borderColor: '#ff7eb9',
+                        backgroundColor: 'rgba(255, 126, 185, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: '点赞数',
+                        data: [5000, 7000, 9000, 12000, 10000, 15000],
+                        borderColor: '#7eb9ff',
+                        backgroundColor: 'rgba(126, 185, 255, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // 粉丝增长图
+            const fansGrowthCtx = document.getElementById('fans-growth-chart').getContext('2d');
+            const fansGrowthChart = new Chart(fansGrowthCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
+                    datasets: [{
+                        label: '新增粉丝',
+                        data: [15000, 21000, 18000, 25000, 30000, 42000],
+                        backgroundColor: 'rgba(147, 51, 234, 0.7)',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // 模拟粉丝分布热力图
+            const fanMap = document.getElementById('fan-map');
+            
+            // 创建一个简单的Canvas来模拟热力图
+            const mapCanvas = document.createElement('canvas');
+            mapCanvas.width = fanMap.offsetWidth;
+            mapCanvas.height = fanMap.offsetHeight;
+            fanMap.appendChild(mapCanvas);
+            
+            const mapCtx = mapCanvas.getContext('2d');
+            
+            // 绘制中国地图轮廓（简化版）
+            mapCtx.beginPath();
+            mapCtx.moveTo(100, 100);
+            mapCtx.lineTo(300, 80);
+            mapCtx.lineTo(450, 120);
+            mapCtx.lineTo(500, 250);
+            mapCtx.lineTo(400, 350);
+            mapCtx.lineTo(250, 320);
+            mapCtx.lineTo(150, 280);
+            mapCtx.lineTo(100, 180);
+            mapCtx.closePath();
+            mapCtx.strokeStyle = '#333';
+            mapCtx.stroke();
+            
+            // 添加热力点
+            const heatPoints = [
+                { x: 200, y: 150, radius: 30, intensity: 0.8 }, // 北京
+                { x: 300, y: 200, radius: 40, intensity: 1.0 }, // 上海
+                { x: 250, y: 250, radius: 25, intensity: 0.7 }, // 成都
+                { x: 180, y: 220, radius: 20, intensity: 0.6 }, // 西安
+                { x: 350, y: 180, radius: 25, intensity: 0.7 }, // 南京
+                { x: 400, y: 220, radius: 30, intensity: 0.8 }, // 杭州
+                { x: 320, y: 300, radius: 20, intensity: 0.6 }, // 广州
+                { x: 300, y: 320, radius: 25, intensity: 0.7 }, // 深圳
+            ];
+            
+            // 绘制热力点
+            heatPoints.forEach(point => {
+                const gradient = mapCtx.createRadialGradient(
+                    point.x, point.y, 0,
+                    point.x, point.y, point.radius
+                );
+                
+                gradient.addColorStop(0, `rgba(255, 126, 185, ${point.intensity})`);
+                gradient.addColorStop(1, 'rgba(255, 126, 185, 0)');
+                
+                mapCtx.beginPath();
+                mapCtx.arc(point.x, point.y, point.radius, 0, Math.PI * 2);
+                mapCtx.fillStyle = gradient;
+                mapCtx.fill();
+            });
+            
+            // 添加城市标签
+            const cities = [
+                { x: 200, y: 150, name: '北京' },
+                { x: 300, y: 200, name: '上海' },
+                { x: 250, y: 250, name: '成都' },
+                { x: 180, y: 220, name: '西安' },
+                { x: 350, y: 180, name: '南京' },
+                { x: 400, y: 220, name: '杭州' },
+                { x: 320, y: 300, name: '广州' },
+                { x: 300, y: 320, name: '深圳' },
+            ];
+            
+            cities.forEach(city => {
+                mapCtx.font = '12px Arial';
+                mapCtx.fillStyle = '#333';
+                mapCtx.textAlign = 'center';
+                mapCtx.fillText(city.name, city.x, city.y - 5);
+            });
+            
+            // 响应窗口大小变化
+            window.addEventListener('resize', function() {
+                mapCanvas.width = fanMap.offsetWidth;
+                mapCanvas.height = fanMap.offsetHeight;
+                
+                // 重新绘制地图
+                mapCtx.beginPath();
+                mapCtx.moveTo(100, 100);
+                mapCtx.lineTo(300, 80);
+                mapCtx.lineTo(450, 120);
+                mapCtx.lineTo(500, 250);
+                mapCtx.lineTo(400, 350);
+                mapCtx.lineTo(250, 320);
+                mapCtx.lineTo(150, 280);
+                mapCtx.lineTo(100, 180);
+                mapCtx.closePath();
+                mapCtx.strokeStyle = '#333';
+                mapCtx.stroke();
+                
+                // 重新绘制热力点
+                heatPoints.forEach(point => {
+                    const gradient = mapCtx.createRadialGradient(
+                        point.x, point.y, 0,
+                        point.x, point.y, point.radius
+                    );
+                    
+                    gradient.addColorStop(0, `rgba(255, 126, 185, ${point.intensity})`);
+                    gradient.addColorStop(1, 'rgba(255, 126, 185, 0)');
+                    
+                    mapCtx.beginPath();
+                    mapCtx.arc(point.x, point.y, point.radius, 0, Math.PI * 2);
+                    mapCtx.fillStyle = gradient;
+                    mapCtx.fill();
+                });
+                
+                // 重新添加城市标签
+                cities.forEach(city => {
+                    mapCtx.font = '12px Arial';
+                    mapCtx.fillStyle = '#333';
+                    mapCtx.textAlign = 'center';
+                    mapCtx.fillText(city.name, city.x, city.y - 5);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
